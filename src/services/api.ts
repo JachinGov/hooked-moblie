@@ -6,24 +6,6 @@ export const API_BASE_URL =
     ? "http://10.0.2.2:3000"
     : "http://192.168.1.101:3000";
 
-// export async function apiFetch(path: string, options: RequestInit = {}) {
-//   const token = await SecureStore.getItemAsync("authToken");
-
-//   const res = await fetch(`${API_BASE_URL}${path}`, {
-//     ...options,
-//     headers: {
-//       "Content-Type": "application/json",
-//       ...options.headers,
-//       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-//     },
-//   });
-
-//   const data = await res.json();
-//   if (!res.ok) {
-//     throw new Error(data.error || "Something went wrong");
-//   }
-//   return data;
-// }
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = await SecureStore.getItemAsync("authToken");
