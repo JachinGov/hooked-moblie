@@ -1,49 +1,66 @@
-import Button from "@/components/Button";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import Button from "../components/Button";
+import { signup } from "../services/auth";
 
 export default function Signup() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  async function handleSignup() {
+    setError("");
+    try {
+      await signup(email, password);
+      router.replace("/spots");
+    } catch (err: any) {
+      console.log("FULL ERROR:", err);
+      setError(err.message);
+    }
+  }
+
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={12}
-        style={styles.backButton}
-      >
-        <Ionicons name="chevron-back" size={28} color="#1e3a5f" />
-      </Pressable>
-      <Text>Sign up</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign Up</Text>
+      <TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        style={styles.input}
+      />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <Button
-        style={styles.buttonLogin}
-        title="Login"
-        onPress={() => router.push("/")}
+        style={styles.btn}
+        title="Create Account"
+        onPress={handleSignup}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonLogin: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
     borderRadius: 8,
-    backgroundColor: "gold",
+    marginVertical: 8,
   },
-  buttonSignUp: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: "blue",
-  },
-  backButton: {
-    position: "absolute",
-    top: 60,
-    left: 20,
+  error: { color: "red", marginTop: 8 },
+  btn: {
+    backgroundColor: "red",
   },
 });
