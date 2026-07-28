@@ -1,8 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, StyleSheet, Text, TextInput, View } from "react-native";
 import Button from "../components/Button";
-import { login } from "../services/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -13,7 +12,7 @@ export default function Login() {
   async function handleLogin() {
     setError("");
     try {
-      await login(email, password);
+      //await login(email, password); Testing put it back when done
       router.replace("/spots");
     } catch (err: any) {
       setError(err.message);
@@ -22,7 +21,12 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Text>Edit src/app/index.tsx to edit this screen.</Text>
+      <Image
+        source={require("@/assets/images/Hooked.png")}
+        style={styles.headerImage}
+        resizeMode="cover"
+      ></Image>
+      <Text style={styles.text}>Welcome Back</Text>
       <TextInput
         placeholder="Email"
         value={email}
@@ -52,34 +56,48 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonLogin: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: "gold",
-  },
-  buttonSignUp: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: "blue",
+    justifyContent: "flex-start",
   },
 
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+  headerImage: {
+    width: "100%",
+    height: 300,
   },
+
+  text: {
+    fontSize: 25,
+    fontWeight: "bold",
+    marginHorizontal: 12,
+  },
+
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 12,
+    margin: 12,
     borderRadius: 8,
-    marginVertical: 8,
+    padding: 12,
   },
+
+  buttonLogin: {
+    margin: 12,
+    borderRadius: 12,
+    backgroundColor: "#F59E0B",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 7,
+    paddingVertical: 12,
+  },
+
+  buttonSignUp: {
+    margin: 12,
+    borderRadius: 12,
+    backgroundColor: "pink",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 7,
+    paddingVertical: 12,
+  },
+
   error: {
     color: "red",
     marginTop: 8,
