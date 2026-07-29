@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,8 @@ export default function AddCatch() {
       showsVerticalScrollIndicator={false}
     >
       <TopNav />
+      <CatchImage />
+      <CatchSpot />
       <ConfigureSpot />
     </ScrollView>
   );
@@ -29,7 +32,7 @@ function TopNav() {
       <Pressable onPress={() => router.back()} hitSlop={12}>
         <Ionicons name="chevron-back" size={28} color="#1e3a5f" />
       </Pressable>
-      <Text style={styles.navTitle}>Add Spot</Text>
+      <Text style={styles.navTitle}>Add Catch</Text>
       <Pressable style={styles.button} onPress={() => console.log("Saved!")}>
         <Text style={styles.buttonText}>Save</Text>
       </Pressable>
@@ -38,66 +41,64 @@ function TopNav() {
 }
 
 function CatchImage() {
-  return <View></View>;
+  return (
+    <View>
+      <Image
+        source={require("@/assets/images/Hooked.png")}
+        style={styles.headerImage}
+        resizeMode="cover"
+      />
+    </View>
+  );
+}
+
+function CatchSpot() {
+  return (
+    <View style={styles.spotLocationContainer}>
+      <Ionicons name="location" size={24} color="#FFFFFF" />
+      <View style={{ marginStart: 10 }}>
+        <Text style={{ color: "#FFFFFF", fontSize: 14 }}>
+          Auto-filled from Rocky Bay
+        </Text>
+        <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 18 }}>
+          Good Conditions
+        </Text>
+      </View>
+    </View>
+  );
 }
 
 function ConfigureSpot() {
-  const [spotName, setSpotName] = useState("");
-  const [waterType, setWaterType] = useState("Saltwater");
+  const [speciesName, setSpeciesName] = useState("");
+  const [speciesWeight, setSpeciesWeight] = useState("");
+  const [speciesLength, setSpeciesLength] = useState("");
   const [spotNotes, setSpotNotes] = useState("");
 
   return (
-    <View style={styles.spotNameContainer}>
-      <Text style={styles.label}>Spot Name</Text>
+    <View style={styles.speciesNameContainer}>
+      <Text style={styles.label}>Species</Text>
       <TextInput
-        placeholder="e.g Rocky Bay"
-        value={spotName}
-        onChangeText={setSpotName}
+        placeholder="e.g Black Tail"
+        value={speciesName}
+        onChangeText={setSpeciesName}
         style={styles.input}
       />
 
-      <Text style={styles.label}>Water Type</Text>
-      <View style={styles.waterType}>
-        <Pressable
-          style={[
-            styles.typeButton,
-            waterType === "Freshwater"
-              ? styles.typeButtonActive
-              : styles.typeButtonInactive,
-          ]}
-          onPress={() => setWaterType("Freshwater")}
-        >
-          <Text
-            style={[
-              waterType === "Freshwater"
-                ? styles.buttonText
-                : styles.typeTextInactive,
-            ]}
-          >
-            Freshwater
-          </Text>
-        </Pressable>
+      <Text style={styles.label}>Weight (KG)</Text>
+      <TextInput
+        placeholder="e.g 4.2"
+        value={speciesWeight}
+        onChangeText={setSpeciesWeight}
+        style={styles.input}
+      />
 
-        <Pressable
-          style={[
-            styles.typeButton,
-            waterType === "Saltwater"
-              ? styles.typeButtonActive
-              : styles.typeButtonInactive,
-          ]}
-          onPress={() => setWaterType("Saltwater")}
-        >
-          <Text
-            style={[
-              waterType === "Saltwater"
-                ? styles.buttonText
-                : styles.typeTextInactive,
-            ]}
-          >
-            Saltwater
-          </Text>
-        </Pressable>
-      </View>
+      <Text style={styles.label}>length (CM)</Text>
+      <TextInput
+        placeholder="e.g 20"
+        value={speciesLength}
+        onChangeText={setSpeciesLength}
+        style={styles.input}
+      />
 
       <Text style={styles.label}>Notes (optional)</Text>
       <TextInput
@@ -121,6 +122,21 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     backgroundColor: "#d2d0d0",
+  },
+  spotLocationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#186088",
+    width: "100%",
+    minHeight: 70,
+    padding: 15,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  headerImage: {
+    width: "100%",
+    height: 200,
   },
   container: {
     paddingTop: 60,
@@ -189,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     height: 120,
   },
-  spotNameContainer: {
+  speciesNameContainer: {
     marginTop: 20,
   },
   waterType: {
