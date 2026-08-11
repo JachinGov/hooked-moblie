@@ -1,7 +1,9 @@
+import { createSpot } from "@/services/spots";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,59 +14,122 @@ import {
 import MapView, { Marker } from "react-native-maps";
 
 export default function AddSpot() {
+  const [location, setLocation] = useState({
+    latitude: -30.2854,
+    longitude: 30.7534,
+  });
+  const [loading, setLoading] = useState(false);
+  const [saveHandler, setSaveHandler] = useState<(() => void) | null>(null);
+
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <TopNav />
-      <Map />
-      <ConfigureSpot />
+      <TopNav onSave={() => saveHandler && saveHandler()} loading={loading} />
+      <Map location={location} setLocation={setLocation} />
+      <ConfigureSpot
+        location={location}
+        setLoading={setLoading}
+        loading={loading}
+        onRegisterSave={setSaveHandler}
+      />
     </ScrollView>
   );
 }
 
-function TopNav() {
+function TopNav({ onSave, loading }: { onSave: () => void; loading: boolean }) {
   return (
     <View style={styles.topNavContainer}>
-      <Pressable onPress={() => router.back()} hitSlop={12}>
+      <Pressable onPress={() => router.back()} hitSlop={12} disabled={loading}>
         <Ionicons name="chevron-back" size={28} color="#1e3a5f" />
       </Pressable>
       <Text style={styles.navTitle}>Add Spot</Text>
-      <Pressable style={styles.button} onPress={() => console.log("Saved!")}>
-        <Text style={styles.buttonText}>Save</Text>
+      <Pressable
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={onSave}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        ) : (
+          <Text style={styles.buttonText}>Save</Text>
+        )}
       </Pressable>
     </View>
   );
 }
 
-function Map() {
+function Map({
+  location,
+  setLocation,
+}: {
+  location: { latitude: number; longitude: number };
+  setLocation: (loc: { latitude: number; longitude: number }) => void;
+}) {
   return (
     <View style={styles.mapContainer}>
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: -30.2854,
-          longitude: 30.7534,
+          ...location,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }}
+        onPress={(e) => setLocation(e.nativeEvent.coordinate)}
       >
-        <Marker
-          coordinate={{ latitude: -30.2854, longitude: 30.7534 }}
-          title="Rocky Bay Beach"
-          description="Scottburgh, KZN"
-        />
+        <Marker coordinate={location} title="New spot" />
       </MapView>
     </View>
   );
 }
 
-function ConfigureSpot() {
+function ConfigureSpot({
+  location,
+  loading,
+  setLoading,
+  onRegisterSave,
+}: {
+  location: { latitude: number; longitude: number };
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+  onRegisterSave: (fn: () => void) => void;
+}) {
   const [spotName, setSpotName] = useState("");
   const [waterType, setWaterType] = useState("Saltwater");
   const [spotNotes, setSpotNotes] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleSave() {
+    if (!spotName.trim()) {
+      setError("Please name your spot");
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+
+    try {
+      await createSpot({
+        name: spotName.trim(),
+        latitude: location.latitude,
+        longitude: location.longitude,
+        water_type: waterType.toLowerCase(),
+        notes: spotNotes.trim() || undefined,
+      });
+      router.back();
+    } catch (err: any) {
+      setError(err.message || "Failed to save spot");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Register handleSave so TopNav's Save button can call it
+  useEffect(() => {
+    onRegisterSave(handleSave);
+  }, [onRegisterSave]);
 
   return (
     <View style={styles.spotNameContainer}>
@@ -72,7 +137,10 @@ function ConfigureSpot() {
       <TextInput
         placeholder="e.g Rocky Bay"
         value={spotName}
-        onChangeText={setSpotName}
+        onChangeText={(text) => {
+          setSpotName(text);
+          if (error) setError("");
+        }}
         style={styles.input}
       />
 
@@ -130,8 +198,18 @@ function ConfigureSpot() {
         style={styles.inputNotes}
       />
 
-      <Pressable style={styles.saveButton} onPress={() => router.back()}>
-        <Text style={styles.buttonText}>Save</Text>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <Pressable
+        style={[styles.saveButton, loading && styles.buttonDisabled]}
+        onPress={handleSave}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Save</Text>
+        )}
       </Pressable>
     </View>
   );
@@ -165,6 +243,10 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 80,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
     color: "#FFFFFF",
@@ -243,5 +325,12 @@ const styles = StyleSheet.create({
     width: "60%",
     height: 54,
     marginTop: 20,
+  },
+  errorText: {
+    color: "#DC2626",
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+    fontWeight: "500",
   },
 });

@@ -6,7 +6,6 @@ export const API_BASE_URL =
     ? "http://10.0.2.2:3000"
     : "http://192.168.1.101:3000";
 
-
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = await SecureStore.getItemAsync("authToken");
 
@@ -27,6 +26,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   try {
     data = JSON.parse(text);
   } catch {
+    console.log("SERVER RETURNED THIS NON-JSON TEXT:", text);
     throw new Error("Server did not return valid JSON");
   }
 

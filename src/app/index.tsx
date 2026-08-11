@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, Text, TextInput, View } from "react-native";
 import Button from "../components/Button";
+import { login } from "../services/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export default function Login() {
   async function handleLogin() {
     setError("");
     try {
-      //await login(email, password); Testing put it back when done
+      await login(email, password);
       router.replace("/spots");
     } catch (err: any) {
       setError(err.message);

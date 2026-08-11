@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Button from "../components/Button";
 import { signup } from "../services/auth";
 
@@ -25,6 +32,11 @@ export default function Signup() {
 
   return (
     <View style={styles.container}>
+      <Image
+        source={require("@/assets/images/Hooked.png")}
+        style={styles.headerImage}
+        resizeMode="cover"
+      ></Image>
       <Pressable
         style={styles.backButton}
         onPress={() => router.back()}
@@ -58,7 +70,7 @@ export default function Signup() {
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Button
-        style={styles.btn}
+        style={styles.buttonCreate}
         title="Create Account"
         onPress={handleSignup}
       />
@@ -67,22 +79,37 @@ export default function Signup() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  container: { flex: 1, justifyContent: "flex-start" },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    marginHorizontal: 12,
+  },
+  headerImage: {
+    width: "100%",
+    height: 300,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 12,
+    margin: 12,
     borderRadius: 8,
-    marginVertical: 8,
+    padding: 12,
   },
   error: { color: "red", marginTop: 8 },
-  btn: {
-    backgroundColor: "red",
+  buttonCreate: {
+    margin: 12,
+    borderRadius: 12,
+    backgroundColor: "#F59E0B",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 7,
+    paddingVertical: 12,
   },
   backButton: {
     position: "absolute",
     top: 60,
-    left: 20,
+    left: 10,
   },
 });

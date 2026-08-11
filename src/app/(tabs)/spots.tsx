@@ -1,28 +1,77 @@
 import { getCurrentUser } from "@/services/auth";
+import { getSpots } from "@/services/spots";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { FAB } from "react-native-paper";
 
 export default function Spots() {
   const [userName, setUserName] = useState("");
+  const [spots, setSpots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadUser();
   }, []);
 
+  // useFocusEffect runs whenever the screen comes into active view
+  useFocusEffect(
+    useCallback(() => {
+      loadSpots();
+    }, []),
+  );
+
   async function loadUser() {
     const user = await getCurrentUser();
     if (user) setUserName(user.name);
   }
+
+  async function loadSpots() {
+    try {
+      const data = await getSpots();
+      setSpots(data);
+    } catch (err) {
+      console.error("Failed to load spots", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.backButton}>GOOD MORNING, {userName}</Text>
+      <Text style={styles.backButton}>
+        {userName ? `GOOD MORNING, ${userName.toUpperCase()}` : "GOOD MORNING"}
+      </Text>
       <Text style={styles.back}>My Spots</Text>
+
       <Weather />
-      <SpotCard />
+
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#186088"
+          style={{ marginTop: 20 }}
+        />
+      ) : spots.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No spots saved yet.</Text>
+          <Text style={styles.emptySubText}>
+            Tap the + button to add your first spot!
+          </Text>
+        </View>
+      ) : (
+        spots.map((spot) => <SpotCard key={spot.id} spot={spot} />)
+      )}
+
       <FAB
         icon="plus"
         color="#FFFFFF"
@@ -44,23 +93,24 @@ function Weather() {
   );
 }
 
-function SpotCard() {
+function SpotCard({ spot }: { spot: any }) {
+  // Capitalize first letter of water_type for clean display
+  const formattedWaterType = spot.water_type
+    ? spot.water_type.charAt(0).toUpperCase() + spot.water_type.slice(1)
+    : "";
+
   return (
     <View style={styles.spotContainer}>
       <FontAwesome name="map-o" size={24} color="#186088" />
-      <SpotData />
-    </View>
-  );
-}
-
-function SpotData() {
-  return (
-    <View style={styles.dataContainer}>
-      <Text style={{ color: "#186088", fontWeight: "bold", fontSize: 18 }}>
-        Rocky Bay Beach
-      </Text>
-      <Text style={{ color: "#186088", fontSize: 18 }}>Park Rynie, KZN</Text>
-      <Text style={{ color: "#186088", fontSize: 18 }}>Saltwater</Text>
+      <Pressable
+        style={{ flex: 1 }}
+        onPress={() => router.push(`/spot/${spot.id}`)}
+      >
+        <View style={styles.dataContainer}>
+          <Text style={styles.spotTitle}>{spot.name}</Text>
+          <Text style={styles.spotSubText}>{formattedWaterType}</Text>
+        </View>
+      </Pressable>
     </View>
   );
 }
@@ -77,9 +127,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingBottom: 100,
-    top: 50,
-    left: 0,
-    right: 0,
+    paddingTop: 50,
     backgroundColor: "#d2d0d0",
   },
   backButton: {
@@ -108,18 +156,42 @@ const styles = StyleSheet.create({
   spotContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
     backgroundColor: "white",
     width: "100%",
-    minHeight: 120,
+    minHeight: 90,
     padding: 15,
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   dataContainer: {
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: 8,
+    gap: 4,
     marginLeft: 8,
+  },
+  spotTitle: {
+    color: "#186088",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+  spotSubText: {
+    color: "#186088",
+    fontSize: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#151535",
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#636366",
+    marginTop: 4,
   },
 });

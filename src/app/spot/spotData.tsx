@@ -1,11 +1,9 @@
-//import { apiFetch } from "@/services/api";
 import { getConditions } from "@/services/conditions";
-import { getSpot } from "@/services/spots";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,196 +11,92 @@ import {
   View,
 } from "react-native";
 
-export default function SpotDetail() {
-  const { id } = useLocalSearchParams();
-  const [spot, setSpot] = useState<any>(null);
-  const [conditions, setConditions] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+// --- ConditionsCard Helpers & Types ---
+type ConditionsCardProps = {
+  score: number;
+  reasons: string[];
+};
 
-  useEffect(() => {
-    if (id) {
-      loadData();
-    }
-  }, [id]);
+function ConditionsCard({ score, reasons }: ConditionsCardProps) {
+  const color = score >= 70 ? "#22C55E" : score >= 40 ? "#F59E0B" : "#EF4444";
 
-  async function loadData() {
-    setLoading(true);
-    setError("");
-    try {
-      // 1. Fetch spot data
-      const spotData = await getSpot(id as string);
-      setSpot(spotData);
-
-      // 2. Fetch live/calculated conditions
-      try {
-        const conditionsData = await getConditions(id as string);
-        console.log("CONDITIONS DATA:", conditionsData);
-        setConditions(conditionsData);
-      } catch (condErr) {
-        console.warn("Could not fetch conditions:", condErr);
-        setConditions(null);
-      }
-    } catch (err: any) {
-      console.error("Failed to load spot detail:", err);
-      setError(err.message || "Could not load spot details.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#186088" />
-        <Text style={styles.loadingText}>Fetching spot details...</Text>
-      </View>
-    );
-  }
-
-  if (error || !spot) {
-    return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color="#DC2626" />
-        <Text style={styles.errorText}>{error || "Spot not found."}</Text>
-        <Pressable style={styles.retryButton} onPress={loadData}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  const formattedWaterType = spot.water_type
-    ? spot.water_type.charAt(0).toUpperCase() + spot.water_type.slice(1)
-    : "N/A";
-
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Top Header Navigation */}
-      <View style={styles.topNav}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={28} color="#151535" />
-        </Pressable>
-        <Text style={styles.navTitle} numberOfLines={1}>
-          {spot.name}
-        </Text>
-        <View style={{ width: 28 }} />
-      </View>
-
-      {/* Spot Header Info */}
-      <View style={styles.headerCard}>
-        <Text style={styles.spotTitle}>{spot.name}</Text>
-        <View style={styles.badge}>
-          <FontAwesome5 name="water" size={12} color="#186088" />
-          <Text style={styles.badgeText}>{formattedWaterType}</Text>
-        </View>
-
-        {spot.notes ? (
-          <View style={styles.notesContainer}>
-            <Text style={styles.notesLabel}>Notes:</Text>
-            <Text style={styles.notesText}>{spot.notes}</Text>
-          </View>
-        ) : null}
-      </View>
-
-      {/* Conditions Card */}
-      {conditions ? (
-        <>
-          <ConditionsCard
-            score={conditions.score}
-            reasons={conditions.reasons}
-          />
-
-          <WeatherCard weather={conditions.weather} />
-
-          <MoonCard moon={conditions.moon} />
-
-          <TideCard tideState={conditions.tideState} />
-        </>
-      ) : null}
-    </ScrollView>
-  );
-}
-
-function ConditionsCard({
-  score,
-  reasons,
-}: {
-  score?: number;
-  reasons?: string[];
-}) {
-  const color =
-    score !== undefined && score >= 70
-      ? "#22C55E"
-      : score !== undefined && score >= 40
-        ? "#F59E0B"
-        : "#EF4444";
-
-  const label =
-    score !== undefined && score >= 70
-      ? "Good"
-      : score !== undefined && score >= 40
-        ? "Fair"
-        : "Poor";
+  const label = score >= 70 ? "Good" : score >= 40 ? "Fair" : "Poor";
 
   const title =
-    score !== undefined && score >= 70
-      ? "Excellent fishing"
-      : score !== undefined && score >= 40
-        ? "Average fishing"
-        : "Tough fishing";
+    score >= 70
+      ? "Excellent fishing conditions"
+      : score >= 40
+        ? "Fair fishing conditions"
+        : "Difficult fishing conditions";
 
   return (
     <View style={styles.conditionsCard}>
       <Text style={styles.sectionHeader}>Fishing Conditions</Text>
 
-      {/* Score */}
+      {/* SCORE */}
       <View style={styles.scoreRow}>
         <View
           style={[
             styles.scoreCircle,
             {
               borderColor: color,
-              borderWidth: 4,
             },
           ]}
         >
-          <Text style={[styles.scoreNumber, { color }]}>{score ?? "--"}</Text>
+          <Text
+            style={[
+              styles.scoreNumber,
+              {
+                color,
+              },
+            ]}
+          >
+            {score}
+          </Text>
 
-          <Text style={[styles.scoreMax, { color }]}>{label}</Text>
+          <Text
+            style={[
+              styles.scoreMax,
+              {
+                color,
+              },
+            ]}
+          >
+            {label}
+          </Text>
         </View>
 
-        <View style={styles.explanationContainer}>
-          <Text style={styles.explanationTitle}>{title}</Text>
+        <View style={styles.scoreInfo}>
+          <Text style={styles.scoreTitle}>{title}</Text>
 
-          <Text style={styles.explanationText}>
-            Today's fishing score is based on the current weather, pressure,
-            wind and water conditions.
+          <Text style={styles.scoreSubtitle}>
+            Based on the current weather, pressure, moon and water conditions.
           </Text>
         </View>
       </View>
 
-      {/* Reasons */}
+      {/* REASONS */}
       <View style={styles.reasonsContainer}>
         <Text style={styles.reasonsTitle}>Why this score?</Text>
 
         {reasons && reasons.length > 0 ? (
           reasons.map((reason, index) => (
-            <View key={index} style={styles.reasonRow}>
+            <View key={`${reason}-${index}`} style={styles.reasonRow}>
               <View style={styles.reasonIcon}>
-                <Ionicons name="checkmark" size={14} color="white" />
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
               </View>
 
               <Text style={styles.reasonText}>{reason}</Text>
             </View>
           ))
         ) : (
-          <Text style={styles.noReasons}>No detailed reasons available.</Text>
+          <Text style={styles.noReasons}>No scoring reasons available.</Text>
         )}
       </View>
     </View>
   );
 }
+
 type WeatherCardProps = {
   weather: {
     airTemperature: number;
@@ -227,6 +121,7 @@ function WeatherCard({ weather }: WeatherCardProps) {
         <Ionicons name="partly-sunny-outline" size={30} color="#186088" />
       </View>
 
+      {/* Main temperature */}
       <View style={styles.temperatureRow}>
         <Text style={styles.temperature}>
           {Math.round(weather.airTemperature)}°
@@ -245,6 +140,7 @@ function WeatherCard({ weather }: WeatherCardProps) {
         </View>
       </View>
 
+      {/* Weather stats */}
       <View style={styles.weatherGrid}>
         <WeatherStat
           icon="speedometer-outline"
@@ -289,6 +185,7 @@ function WeatherStat({
 
       <View style={{ marginLeft: 10 }}>
         <Text style={styles.statLabel}>{label}</Text>
+
         <Text style={styles.statValue}>{value}</Text>
       </View>
     </View>
@@ -317,6 +214,7 @@ function MoonCard({ moon }: MoonCardProps) {
       <View style={styles.cardHeader}>
         <View>
           <Text style={styles.cardHeading}>Moon</Text>
+
           <Text style={styles.cardSubheading}>Lunar conditions</Text>
         </View>
 
@@ -338,11 +236,13 @@ function MoonCard({ moon }: MoonCardProps) {
       <View style={styles.moonTimes}>
         <View>
           <Text style={styles.statLabel}>Moonrise</Text>
+
           <Text style={styles.statValue}>{formatTime(moon.rise)}</Text>
         </View>
 
         <View>
           <Text style={styles.statLabel}>Moonset</Text>
+
           <Text style={styles.statValue}>{formatTime(moon.set)}</Text>
         </View>
       </View>
@@ -362,6 +262,7 @@ function TideCard({ tideState }: TideCardProps) {
       <View style={styles.cardHeader}>
         <View>
           <Text style={styles.cardHeading}>Tides</Text>
+
           <Text style={styles.cardSubheading}>Tidal conditions</Text>
         </View>
 
@@ -391,169 +292,267 @@ function TideCard({ tideState }: TideCardProps) {
   );
 }
 
+// --- Main Component ---
+export default function Spots() {
+  const [conditions, setConditions] = useState<any>(null);
+
+  useEffect(() => {
+    loadConditions();
+  }, []);
+
+  async function loadConditions() {
+    try {
+      const data = await getConditions("7");
+
+      console.log("Conditions:", data);
+
+      setConditions(data);
+    } catch (error) {
+      console.error("Could not fetch conditions:", error);
+    }
+  }
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <ImageBackground
+        source={require("@/assets/images/Hooked.png")}
+        resizeMode="cover"
+        style={styles.imageBackground}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={{ paddingTop: 50, paddingLeft: 20 }}
+        >
+          <Ionicons name="chevron-back" size={28} color="#1e3a5f" />
+        </Pressable>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            padding: 20,
+            paddingBottom: 50, // Extra padding at bottom so text stays clear of the floating card
+            alignItems: "flex-end",
+          }}
+        >
+          <View>
+            <Text style={{ color: "white", fontWeight: "bold" }}>
+              Park Rynie, KZN
+            </Text>
+            <Text style={{ color: "white", fontWeight: "bold", fontSize: 20 }}>
+              Rocky Bay Beach
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: "grey",
+              height: 30,
+              alignItems: "center",
+              justifyContent: "center",
+              width: 80,
+              borderRadius: 20,
+            }}
+          >
+            <Text style={{ color: "white", fontWeight: "bold" }}>
+              Saltwater
+            </Text>
+          </View>
+        </View>
+      </ImageBackground>
+
+      {/* ConditionsCard overlapping the image */}
+      {conditions && (
+        <>
+          <ConditionsCard
+            score={conditions.score}
+            reasons={conditions.reasons}
+          />
+
+          <WeatherCard weather={conditions.weather} />
+
+          <MoonCard moon={conditions.moon} />
+
+          <TideCard tideState={conditions.tideState} />
+        </>
+      )}
+
+      <Stats />
+    </ScrollView>
+  );
+}
+
+// --- Stats Helpers & Components ---
+interface StatBlockProps {
+  value: string | number;
+  label: string;
+}
+
+function Stats() {
+  return (
+    <>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginHorizontal: 20,
+        }}
+      >
+        <StatBlock value={24} label="Total Catches" />
+        <StatBlock value="Rocky Bay" label="Favorite Spot" />
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginHorizontal: 20,
+        }}
+      >
+        <StatBlock value={91} label="Best Score" />
+        <StatBlock value={8} label="Species Caught" />
+      </View>
+    </>
+  );
+}
+
+function StatBlock({ value, label }: StatBlockProps) {
+  return (
+    <View style={styles.statContainer}>
+      <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 18 }}>
+        {value}
+      </Text>
+      <Text style={{ color: "#FFFFFF", fontSize: 12 }}>{label}</Text>
+    </View>
+  );
+}
+
+// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
     backgroundColor: "#d2d0d0",
   },
-  centerContainer: {
-    flex: 1,
+  imageBackground: {
+    height: 250, // Added explicit height so the background displays correctly in ScrollView
+  },
+  scoreCircle: {
+    width: 95,
+    height: 95,
+    borderRadius: 48,
+    borderWidth: 5,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#d2d0d0",
-    padding: 20,
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#186088",
-    fontWeight: "600",
+
+  scoreNumber: {
+    fontSize: 28,
+    fontWeight: "800",
   },
-  errorText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#DC2626",
-    textAlign: "center",
-  },
-  retryButton: {
-    marginTop: 16,
-    backgroundColor: "#186088",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  retryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  topNav: {
+  // ConditionsCard styles (with -40 negative margin to pull card over hero image)
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  navTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#151535",
-  },
-  headerCard: {
-    backgroundColor: "white",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 20,
-    marginBottom: 20,
+    marginHorizontal: 16,
+    marginTop: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  spotTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#151535",
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#E2F1F8",
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  badgeText: {
-    color: "#186088",
+  scoreLabel: {
+    fontSize: 11,
     fontWeight: "600",
-    fontSize: 14,
-  },
-  notesContainer: {
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
-  },
-  notesLabel: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#636366",
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  notesText: {
-    fontSize: 14,
-    color: "#151535",
-    marginTop: 4,
+  textBlock: {
+    flex: 1,
   },
-  conditionsCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 20,
-  },
-  sectionHeader: {
+  title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#151535",
-    marginBottom: 16,
+    color: "#0D2B45",
+    marginBottom: 4,
   },
+  explanation: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+  },
+  statContainer: {
+    marginTop: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+    backgroundColor: "#186088",
+    width: "45%",
+    minHeight: 80,
+    borderRadius: 12,
+  },
+  // new styles
+  conditionsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 20,
+  },
+
   scoreRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    marginTop: 18,
   },
-  scoreCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#186088",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scoreNumber: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  scoreMax: {
-    color: "#B0D4E7",
-    fontSize: 10,
-  },
-  explanationContainer: {
+
+  scoreInfo: {
     flex: 1,
+    marginLeft: 16,
   },
-  explanationTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#151535",
+
+  scoreTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0D2B45",
   },
-  explanationText: {
-    fontSize: 14,
-    color: "#636366",
-    marginTop: 4,
+
+  scoreSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 5,
+    lineHeight: 18,
   },
+
   reasonsContainer: {
-    marginTop: 20,
-    paddingTop: 16,
+    marginTop: 22,
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
+    paddingTop: 16,
   },
 
   reasonsTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#151535",
-    marginBottom: 12,
+    color: "#0D2B45",
+    marginBottom: 10,
   },
 
   reasonRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 9,
   },
 
   reasonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: "#22C55E",
     alignItems: "center",
     justifyContent: "center",
@@ -561,7 +560,6 @@ const styles = StyleSheet.create({
   },
 
   reasonText: {
-    flex: 1,
     fontSize: 14,
     color: "#374151",
   },
@@ -570,6 +568,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
   },
+
+  weatherCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+  },
+
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -586,13 +593,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#8A94A6",
     marginTop: 3,
-  },
-
-  weatherCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 20,
-    marginTop: 16,
   },
 
   temperatureRow: {
@@ -652,6 +652,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 20,
+    marginHorizontal: 16,
     marginTop: 16,
   },
 
@@ -705,6 +706,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 20,
+    marginHorizontal: 16,
     marginTop: 16,
   },
 
@@ -737,5 +739,16 @@ const styles = StyleSheet.create({
   tideDescription: {
     color: "#8A94A6",
     marginTop: 4,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#151535",
+    marginBottom: 16,
+  },
+  scoreMax: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
 });

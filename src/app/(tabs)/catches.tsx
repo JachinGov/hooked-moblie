@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingBottom: 100,
-    top: 50,
+    paddingTop: 50,
     left: 0,
     right: 0,
     backgroundColor: "#d2d0d0",
